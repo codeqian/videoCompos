@@ -19,11 +19,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import org.wysaid.myUtils.FileUtil;
+import org.wysaid.myUtils.ImageUtil;
+import org.wysaid.view.CameraRecordGLSurfaceView;
+
 public class MainActivity extends Activity {
-    private Button playBtn,imgBtn,musicBtn,videoBtn;
+    private Button cameraBtn,playBtn,imgBtn,musicBtn,videoBtn,sepiaBtn,grayBtn,sharpBtn,edgeBtn,switchCameraBtn;
     private ImageView imgPreview;
     private ProgressBar bufferIcon;
-    private SurfaceView surfaceView;
+//    private SurfaceView surfaceView;
     //播放器
     private MediaPlayer mPlayer;
     private MediaPlayer aPlayer;
@@ -38,6 +42,10 @@ public class MainActivity extends Activity {
     private Bitmap imageBitmap;
     private Handler mHandler;
     private boolean isPlaying=false;
+    private boolean isRecording = false;
+    private String recordFilename="testVideo";
+    private CameraRecordGLSurfaceView mCameraView;
+    public static String lastVideoPathFileName = FileUtil.getPath() + "/lastVideoPath.txt";
 
     private final int IMAGE_FILE=1;
     private final int MUSIC_FILE=2;
@@ -53,20 +61,36 @@ public class MainActivity extends Activity {
 
     private void findView(){
         playBtn=(Button) findViewById(R.id.playBtn);
+        cameraBtn=(Button) findViewById(R.id.cameraBtn);
+        switchCameraBtn=(Button) findViewById(R.id.switchCameraBtn);
         imgBtn=(Button) findViewById(R.id.imgBtn);
         musicBtn=(Button) findViewById(R.id.musicBtn);
         videoBtn=(Button) findViewById(R.id.videoBtn);
+        sepiaBtn=(Button) findViewById(R.id.sepiaBtn);
+        grayBtn=(Button) findViewById(R.id.grayBtn);
+        sharpBtn=(Button) findViewById(R.id.sharpBtn);
+        edgeBtn=(Button) findViewById(R.id.edgeBtn);
         bufferIcon=(ProgressBar) findViewById(R.id.bufferIcon);
-        surfaceView=(SurfaceView) findViewById(R.id.surfaceView);
+//        surfaceView=(SurfaceView) findViewById(R.id.surfaceView);
         imgPreview=(ImageView) findViewById(R.id.imgPreview);
+
+        mCameraView = (CameraRecordGLSurfaceView) findViewById(R.id.myGLSurfaceView);
+        mCameraView.presetCameraForward(false);
+
         bufferIcon.setVisibility(View.GONE);
         imgBtn.setOnClickListener(clickBtn);
+        switchCameraBtn.setOnClickListener(clickBtn);
         musicBtn.setOnClickListener(clickBtn);
         videoBtn.setOnClickListener(clickBtn);
+        sepiaBtn.setOnClickListener(clickBtn);
+        grayBtn.setOnClickListener(clickBtn);
+        sharpBtn.setOnClickListener(clickBtn);
+        edgeBtn.setOnClickListener(clickBtn);
+        cameraBtn.setOnClickListener(clickBtn);
 
         //初始化播放器
         mPlayer=new MediaPlayer();
-        initSurfaceView();
+//        initSurfaceView();
         mHandler = new Handler() {  //初始化handler
             @Override
             public void handleMessage(Message msg) { //通过handleMessage()来处理传来的消息
@@ -79,29 +103,29 @@ public class MainActivity extends Activity {
     /**
      * 初始化surfaceView
      */
-    private void initSurfaceView(){
-        sfHolder=surfaceView.getHolder();
-        sfHolder.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.d("LOGCAT", "surfaceDestroyed");
-            }
-
-            //必须监听surfaceView的创建，创建完毕后才可以处理播放
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                playBtn.setOnClickListener(clickBtn);
-                //把视频画面输出到SurfaceView
-                mPlayer.setDisplay(sfHolder);
-                Log.d("LOGCAT", "surfaceCreated");
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.d("LOGCAT", "surfaceChanged");
-            }
-        });
-    }
+//    private void initSurfaceView(){
+//        sfHolder=surfaceView.getHolder();
+//        sfHolder.addCallback(new SurfaceHolder.Callback() {
+//            @Override
+//            public void surfaceDestroyed(SurfaceHolder holder) {
+//                Log.d("LOGCAT", "surfaceDestroyed");
+//            }
+//
+//            //必须监听surfaceView的创建，创建完毕后才可以处理播放
+//            @Override
+//            public void surfaceCreated(SurfaceHolder holder) {
+//                playBtn.setOnClickListener(clickBtn);
+//                //把视频画面输出到SurfaceView
+//                mPlayer.setDisplay(sfHolder);
+//                Log.d("LOGCAT", "surfaceCreated");
+//            }
+//
+//            @Override
+//            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+//                Log.d("LOGCAT", "surfaceChanged");
+//            }
+//        });
+//    }
 
     /**
      * 播放视频
@@ -156,7 +180,7 @@ public class MainActivity extends Activity {
         }else{
             Log.d("LOGCAT","has audioPlayer");
             if(!aPlayer.isPlaying()) {
-                Log.d("LOGCAT","retart");
+                Log.d("LOGCAT","reStart");
                 aPlayer.start();
             }
         }
@@ -242,6 +266,40 @@ public class MainActivity extends Activity {
                         isPlaying=true;
                     }
                     break;
+                case R.id.cameraBtn:
+                    //录制
+                    isRecording = !isRecording;
+                    if(isRecording)
+                    {
+                        cameraBtn.setText("正在录制");
+                        Log.i("LOGCAT", "Start recording...");
+                        mCameraView.setClearColor(1.0f, 0.0f, 0.0f, 0.3f);
+                        recordFilename = ImageUtil.getPath() + "/rec_" + System.currentTimeMillis() + ".mp4";
+                        mCameraView.startRecording(recordFilename, new CameraRecordGLSurfaceView.StartRecordingCallback() {
+                            @Override
+                            public void startRecordingOver(boolean success) {
+                                if (success) {
+                                    Log.i("LOGCAT", "启动录制成功");
+                                } else {
+                                    Log.i("LOGCAT", "启动录制失败");
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Log.i("LOGCAT", "录制完毕， 存储为 " + recordFilename);
+                        cameraBtn.setText("录制完毕");
+                        Log.i("LOGCAT", "End recording...");
+                        mCameraView.setClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                        mCameraView.endRecording(new CameraRecordGLSurfaceView.EndRecordingCallback() {
+                            @Override
+                            public void endRecordingOK() {
+                                Log.i("LOGCAT", "End recording OK");
+                            }
+                        });
+                    }
+                    break;
                 case R.id.imgBtn:
                     file_type=IMAGE_FILE;
                     chooseFile();
@@ -253,6 +311,21 @@ public class MainActivity extends Activity {
                 case R.id.videoBtn:
                     file_type=VIDEO_FILE;
                     chooseFile();
+                    break;
+                case R.id.switchCameraBtn:
+                    mCameraView.switchCamera();
+                    break;
+                case R.id.sepiaBtn:
+                    mCameraView.setFilterWithConfig(value.effectConfigs[0]);
+                    break;
+                case R.id.grayBtn:
+                    mCameraView.setFilterWithConfig(value.effectConfigs[1]);
+                    break;
+                case R.id.sharpBtn:
+                    mCameraView.setFilterWithConfig(value.effectConfigs[20]);
+                    break;
+                case R.id.edgeBtn:
+                    mCameraView.setFilterWithConfig(value.effectConfigs[30]);
                     break;
                 default:
                     break;

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/src/gpuimagelibrary/gpuimagelibrary.iml" filepath="$PROJECT_DIR$/app/src/gpuimagelibrary/gpuimagelibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/videoCompos.iml" filepath="$PROJECT_DIR$/videoCompos.iml" />
     </modules>
   </component>

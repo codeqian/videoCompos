@@ -1,1 +1,2 @@
-include ':app'
+include ':app', ':gpuimagelibrary'
+project(':gpuimagelibrary').projectDir = new File('app/src/gpuimagelibrary')
