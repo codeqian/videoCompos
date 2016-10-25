@@ -25,5 +25,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".gpuImageFilter"
+            android:label="filterDemo"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".composDemo"
+            android:label="composDemo"
+            android:screenOrientation="landscape" />
     </application>
 </manifest>

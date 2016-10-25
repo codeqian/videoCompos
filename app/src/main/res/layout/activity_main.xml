@@ -1,118 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:id="@+id/activity_main"
-    android:layout_width="match_parent"
+    android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <RelativeLayout
+<Button
+    android:id="@+id/filterDemo"
+    android:text="filterDemo"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/composDemo"
+        android:text="composDemo"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:id="@+id/playerPlan">
-        <!--渲染层-->
-        <!--<SurfaceView-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:id="@+id/surfaceView"/>-->
-        <org.wysaid.view.CameraRecordGLSurfaceView
-            android:id="@+id/myGLSurfaceView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-        <!--缓冲图标-->
-        <ProgressBar
-            android:id="@+id/bufferIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true" />
-
-        <!--GPUimage这个货无法处理视频啊，android版不给力啊喂-->
-        <!--<jp.co.cyberagent.android.gpuimage.GPUImageView-->
-            <!--android:id="@+id/imgPreview"-->
-            <!--android:src="@drawable/videobg"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_centerVertical="true"-->
-            <!--android:layout_centerHorizontal="true" />-->
-        <ImageView
-            android:id="@+id/imgPreview"
-            android:src="@drawable/videobg"
-            android:scaleType="fitXY"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
-    <!--play按钮-->
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true">
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
-                android:text="play"
-                android:id="@+id/playBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/switchCameraBtn"
-                android:text="Switch"/>
-        </LinearLayout>
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
-                android:text="camera"
-                android:id="@+id/cameraBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="image"
-                android:id="@+id/imgBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="music"
-                android:id="@+id/musicBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="video"
-                android:id="@+id/videoBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
-                android:text="none"
-                android:id="@+id/sepiaBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="filter2"
-                android:id="@+id/grayBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="filter3"
-                android:id="@+id/sharpBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-            <Button
-                android:text="filter0"
-                android:id="@+id/edgeBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-    </LinearLayout>
+        android:layout_height="wrap_content" />
 </LinearLayout>
