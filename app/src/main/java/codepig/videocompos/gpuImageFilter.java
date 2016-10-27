@@ -2,8 +2,10 @@ package codepig.videocompos;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -17,18 +19,26 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import org.wysaid.myUtils.FileUtil;
 import org.wysaid.myUtils.ImageUtil;
+import org.wysaid.nativePort.CGEFFmpegNativeLibrary;
+import org.wysaid.nativePort.CGEFrameRecorder;
+import org.wysaid.nativePort.CGENativeLibrary;
 import org.wysaid.view.CameraRecordGLSurfaceView;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * 使用第三方库(android-gpuimage-plus-master)的滤镜效果。
+ * drawable和assets内分别放用于合成的相框图片和对应的mask文件
  * Created by QZD on 2016/10/25.
  */
 
 public class gpuImageFilter extends Activity{
-    private Button cameraBtn,playBtn,imgBtn,musicBtn,videoBtn,sepiaBtn,grayBtn,sharpBtn,edgeBtn,switchCameraBtn;
+    private Button cameraBtn,playBtn,imgBtn,musicBtn,videoBtn,sepiaBtn,grayBtn,sharpBtn,edgeBtn,switchCameraBtn,blendBtn,frameBtn;
     private ImageView imgPreview;
     private ProgressBar bufferIcon;
     //    private SurfaceView surfaceView;
@@ -50,6 +60,7 @@ public class gpuImageFilter extends Activity{
     private String recordFilename="testVideo";
     private CameraRecordGLSurfaceView mCameraView;
     public static String lastVideoPathFileName = FileUtil.getPath() + "/lastVideoPath.txt";
+    private int frameIndex=-1;
 
     private final int IMAGE_FILE=1;
     private final int MUSIC_FILE=2;
@@ -66,8 +77,10 @@ public class gpuImageFilter extends Activity{
     private void findView(){
         playBtn=(Button) findViewById(R.id.playBtn);
         cameraBtn=(Button) findViewById(R.id.cameraBtn);
+        frameBtn=(Button) findViewById(R.id.frameBtn);
         switchCameraBtn=(Button) findViewById(R.id.switchCameraBtn);
         imgBtn=(Button) findViewById(R.id.imgBtn);
+        blendBtn=(Button) findViewById(R.id.blendBtn);
         musicBtn=(Button) findViewById(R.id.musicBtn);
         videoBtn=(Button) findViewById(R.id.videoBtn);
         sepiaBtn=(Button) findViewById(R.id.sepiaBtn);
@@ -85,12 +98,16 @@ public class gpuImageFilter extends Activity{
         imgBtn.setOnClickListener(clickBtn);
         switchCameraBtn.setOnClickListener(clickBtn);
         musicBtn.setOnClickListener(clickBtn);
+        frameBtn.setOnClickListener(clickBtn);
         videoBtn.setOnClickListener(clickBtn);
         sepiaBtn.setOnClickListener(clickBtn);
         grayBtn.setOnClickListener(clickBtn);
         sharpBtn.setOnClickListener(clickBtn);
+        blendBtn.setOnClickListener(clickBtn);
         edgeBtn.setOnClickListener(clickBtn);
         cameraBtn.setOnClickListener(clickBtn);
+
+        blendBtn.setVisibility(View.GONE);
 
         //初始化播放器
         mPlayer=new MediaPlayer();
@@ -103,33 +120,6 @@ public class gpuImageFilter extends Activity{
             }
         };
     }
-
-    /**
-     * 初始化surfaceView
-     */
-//    private void initSurfaceView(){
-//        sfHolder=surfaceView.getHolder();
-//        sfHolder.addCallback(new SurfaceHolder.Callback() {
-//            @Override
-//            public void surfaceDestroyed(SurfaceHolder holder) {
-//                Log.d("LOGCAT", "surfaceDestroyed");
-//            }
-//
-//            //必须监听surfaceView的创建，创建完毕后才可以处理播放
-//            @Override
-//            public void surfaceCreated(SurfaceHolder holder) {
-//                playBtn.setOnClickListener(clickBtn);
-//                //把视频画面输出到SurfaceView
-//                mPlayer.setDisplay(sfHolder);
-//                Log.d("LOGCAT", "surfaceCreated");
-//            }
-//
-//            @Override
-//            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-//                Log.d("LOGCAT", "surfaceChanged");
-//            }
-//        });
-//    }
 
     /**
      * 播放视频
@@ -258,7 +248,10 @@ public class gpuImageFilter extends Activity{
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
-                //播放器区域按钮
+                case R.id.frameBtn:
+                    frameFilter(0);
+                    blendBtn.setVisibility(View.VISIBLE);
+                    break;
                 case R.id.playBtn:
                     if(isPlaying){
                         stopPlayer();
@@ -278,7 +271,7 @@ public class gpuImageFilter extends Activity{
                         cameraBtn.setText("正在录制");
                         Log.i("LOGCAT", "Start recording...");
                         mCameraView.setClearColor(1.0f, 0.0f, 0.0f, 0.3f);
-                        recordFilename = ImageUtil.getPath() + "/rec_" + System.currentTimeMillis() + ".mp4";
+                        recordFilename = FileUtil.getPath() + "/rec_" + System.currentTimeMillis() + ".mp4";
                         mCameraView.startRecording(recordFilename, new CameraRecordGLSurfaceView.StartRecordingCallback() {
                             @Override
                             public void startRecordingOver(boolean success) {
@@ -331,11 +324,74 @@ public class gpuImageFilter extends Activity{
                 case R.id.edgeBtn:
                     mCameraView.setFilterWithConfig(value.effectConfigs[30]);
                     break;
+                case R.id.blendBtn:
+                    if(frameIndex>-1) {
+                        blendVideo(frameIndex);
+                    }
+                    break;
                 default:
                     break;
             }
         }
     };
+
+    /**
+     * 合成相框
+     */
+    private void blendVideo(int _index){
+        final String outputFilename = FileUtil.getPath() + "/blendVideo.mp4";
+        final String inputFileName = recordFilename;
+        if(inputFileName == null) {
+            Log.e("LOGCAT", "no video is recorded");
+            return;
+        }
+        Bitmap bmp;
+        try {
+            AssetManager am = getAssets();
+            InputStream is;
+            is = am.open("frame1.png");//使用assets里的图片做合成。遮罩图基于次图片制作。
+            bmp = BitmapFactory.decodeStream(is);
+        } catch (IOException e) {
+            Log.e("LOGCAT", "Can not open blend image file!");
+            bmp = null;
+        }
+        //bmp is used for watermark,
+        //and ususally the blend mode is CGE_BLEND_ADDREV for watermarks.
+        Log.d("LOGCAT", "start blend!");
+        final Bitmap _bmp=bmp;
+//        Runnable blendRun=new Runnable() {
+//            @Override
+//            public void run() {
+                CGEFFmpegNativeLibrary.generateVideoWithFilter(outputFilename, inputFileName, "", 1.0f, _bmp, CGENativeLibrary.TextureBlendMode.CGE_BLEND_ADDREV, 1.0f, false);
+                Log.d("LOGCAT", "Done! The file is generated at: " + outputFilename);
+                Toast.makeText(this, "Done! The file is generated at: " + outputFilename, Toast.LENGTH_LONG).show();
+//            }
+//        };
+//        ThreadPoolUtils.execute(blendRun);
+    }
+
+    /**
+     * 相框遮罩
+     */
+    private void frameFilter(int _index){
+        frameIndex=_index;
+        boolean mIsUsingShape = false;
+        Bitmap mBmp = BitmapFactory.decodeResource(getResources(), R.drawable.frame1);//使用遮罩图
+        mIsUsingShape = !mIsUsingShape;
+        if (mIsUsingShape) {
+            if (mBmp != null)
+                mCameraView.setMaskBitmap(mBmp, false, new CameraRecordGLSurfaceView.SetMaskBitmapCallback() {
+                    @Override
+                    public void setMaskOK(CGEFrameRecorder recorder) {
+                        //flip mask
+                        if(mCameraView.isUsingMask())
+                            recorder.setMaskFlipScale(1.0f, -1.0f);
+                    }
+                });
+        } else {
+            mCameraView.setMaskBitmap(null, false);
+        }
+    }
 
     /**
      * 监听文件选择

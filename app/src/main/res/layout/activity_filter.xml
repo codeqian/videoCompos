@@ -54,13 +54,23 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/switchCameraBtn"
                 android:text="Switch"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/blendBtn"
+                android:text="blend"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/frameBtn"
+                android:text="addFrame"/>
         </LinearLayout>
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <Button
-                android:text="camera"
+                android:text="recode"
                 android:id="@+id/cameraBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
